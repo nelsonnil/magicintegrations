@@ -25,8 +25,8 @@ final public class CustomApiObservedObject: ObservableObject {
         }
     }
     
-    public let SectionCaption: String = "Paste you Custom API URL that grant access to third party applications and the field you want to observe"
-    public let FieldCaption: String = "e.g., https://api.com/endpoint"
+    public static let SectionCaption: String = "Paste you Custom API URL that grant access to third party applications and the field you want to observe"
+    public static let FieldCaption: String = "e.g., https://api.com/endpoint"
     private var fileName: String
     private var fileUrl: URL?
     
