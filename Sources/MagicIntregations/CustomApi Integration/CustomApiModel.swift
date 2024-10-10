@@ -11,10 +11,12 @@ public struct CustomApiModel: Codable {
     public var url: String
     public var field: String
     public var currentPrediction: String
-    
-    public init(url: String, field: String, currentPrediction: String) {
+    public var count: Int
+
+    public init(url: String, field: String, currentPrediction: String, count: Int) {
         self.url = url
         self.field = field
         self.currentPrediction = currentPrediction
+        self.count = count
     }
 }

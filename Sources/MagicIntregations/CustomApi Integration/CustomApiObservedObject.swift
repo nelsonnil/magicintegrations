@@ -35,7 +35,18 @@ final public class CustomApiObservedObject: ObservableObject {
         self.fileUrl = FileManager.default.documentsDirectory.appendingPathComponent(fileName, conformingTo: .json)
         loadJsonFile()
     }
-    
+
+    public struct StorageKeys {
+        static public var customAPICount: Int {
+            get {
+                UserDefaults.standard.integer(forKey: "customCount")
+            }
+            set(count) {
+                UserDefaults.standard.set(count, forKey: "customCount")
+            }
+        }
+    }
+
     public func loadJsonFile() {
         if let fileUrl {
             if FileManager.default.fileExists(atPath: fileUrl.path) {
@@ -43,11 +54,12 @@ final public class CustomApiObservedObject: ObservableObject {
                 do {
                     let jsonData = try Data(contentsOf: fileUrl)
                     customApiModel = try jsonDecoder.decode(CustomApiModel.self, from: jsonData)
+                    StorageKeys.customAPICount = customApiModel?.count ?? 0
                 } catch {
                     print(error)
                 }
             } else {
-                customApiModel = CustomApiModel(url: "", field: "", currentPrediction: "")
+                customApiModel = CustomApiModel(url: "", field: "", currentPrediction: "", count: 0)
             }
         }
     }
@@ -67,18 +79,24 @@ final public class CustomApiObservedObject: ObservableObject {
     
     @MainActor
     private func decodeDataFromURLcall(data: Data) async throws {
-        do  {
-            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String:Any] {
-                if let customApiModel = customApiModel, let jsonPrediction = jsonObject[customApiModel.field] as? String {
-                    if jsonPrediction !=  customApiModel.currentPrediction {
-                        print(jsonPrediction)
-                        self.prediction = jsonPrediction
-                        self.customApiModel?.currentPrediction = jsonPrediction
-                    }
-                } else {
-                    throw ErrorsEnum.invalidDecodeResponse
+        do {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                if let customApiModel,
+                   let jsonPrediction = jsonObject[customApiModel.field] as? String,
+                   let count = jsonObject["count"] as? Int,
+                   StorageKeys.customAPICount != count
+                {
+                    print(jsonPrediction)
+                    self.prediction = jsonPrediction
+                    self.customApiModel?.currentPrediction = jsonPrediction
+                    self.customApiModel?.count = count
+
+                    StorageKeys.customAPICount = count
                 }
+            } else {
+                throw ErrorsEnum.invalidDecodeResponse
             }
+
         } catch {
             throw ErrorsEnum.invalidDecodeResponse
         }
@@ -92,6 +110,8 @@ final public class CustomApiObservedObject: ObservableObject {
         if let path = fileUrl?.path {
             try? FileManager.default.removeItem(atPath: path)
         }
+
+        UserDefaults.standard.removeObject(forKey: "customCount")
     }
 
 }
