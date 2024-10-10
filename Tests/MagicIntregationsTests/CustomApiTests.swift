@@ -15,7 +15,7 @@ final class CustomApiTests: XCTestCase {
     let customApiObservedObject = CustomApiObservedObject(fileName: "customApi1")
     
     override func setUp() async throws {
-        let customApiModel = CustomApiModel(url: "TEST", field: "song", currentPrediction: "")
+        let customApiModel = CustomApiModel(url: "TEST", field: "song", currentPrediction: "", count: 0)
         customApiObservedObject.customApiModel = customApiModel
     }
     
@@ -34,7 +34,7 @@ final class CustomApiTests: XCTestCase {
     
     func testCustomApiModelHasCertainValues() {
         XCTAssertEqual("TEST", customApiObservedObject.customApiModel?.url)
-        customApiObservedObject.customApiModel = CustomApiModel(url:"www.google.es", field: "value", currentPrediction: "")
+        customApiObservedObject.customApiModel = CustomApiModel(url:"www.google.es", field: "value", currentPrediction: "", count: 0)
         XCTAssertEqual("www.google.es", customApiObservedObject.customApiModel?.url)
         customApiObservedObject.customApiModel = nil
         customApiObservedObject.loadJsonFile()
@@ -94,15 +94,13 @@ final class CustomApiTests: XCTestCase {
         }
         
         let session = URLSessionMock(data: dataResponse.data(using: .utf8))
-        var didFailWithError:Error?
-        
+
         do {
             try await customApiObservedObject.load(urlSession: session)
         } catch {
-            didFailWithError = error
+            XCTFail("call should have been executed successfully")
         }
-        XCTAssertEqual(ErrorsEnum.invalidDecodeResponse, didFailWithError as? ErrorsEnum)
-        
+
         XCTAssertNil(customApiObservedObject.prediction)
     }
     
@@ -181,7 +179,7 @@ final class CustomApiTests: XCTestCase {
         var dataResponse2: String {
             """
             {
-                "count": 49,
+                "count": 50,
                 "datetime": "2022-10-18 20:21:11",
                 "url": "https://genius.com/songs/2414729",
                 "song": "Yesterday",
